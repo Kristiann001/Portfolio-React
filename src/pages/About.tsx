@@ -24,12 +24,8 @@ const About = () => {
   const [adminModalOpen, setAdminModalOpen] = useState(false);
   const [adminPassword, setAdminPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [adminStatus, setAdminStatus] = useState("");
-  const [savingStatus, setSavingStatus] = useState("");
 
-  useEffect(() => {
-    fetchEducation();
-  }, []);
+  const [savingStatus, setSavingStatus] = useState("");
 
   const fetchEducation = async () => {
     setLoading(true);
@@ -43,6 +39,10 @@ const About = () => {
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    fetchEducation();
+  }, []);
 
   const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this record?")) {

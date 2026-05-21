@@ -31,7 +31,7 @@ const Projects = () => {
   const [status, setStatus] = useState('');
   const [statusColor, setStatusColor] = useState('text-white');
   const [adminPassword, setAdminPassword] = useState('');
-  const [adminStatus, setAdminStatus] = useState('');
+
 
   const loadProjects = useCallback(async () => {
     setLoading(true);

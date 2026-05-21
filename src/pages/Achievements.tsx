@@ -31,7 +31,7 @@ const Achievements = () => {
   const [statusColor, setStatusColor] = useState("text-white");
   const [adminPassword, setAdminPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [adminStatus, setAdminStatus] = useState("");
+
 
   const loadAchievements = useCallback(async () => {
     setLoading(true);
