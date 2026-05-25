@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import Swal from "sweetalert2";
 import { supabase } from "../utils/supabase";
 import PdfPreview from "../components/PdfPreview";
+import { cacheGet, cacheBust } from "../utils/cache";
 
 interface Achievement {
   id: string;
@@ -52,24 +53,23 @@ const Achievements = () => {
     return 0;
   };
 
-  const loadAchievements = useCallback(async () => {
+  const loadAchievements = useCallback(async (bustCache = false) => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('achievements')
-        .select('*');
-        
-      if (error) throw error;
-
-      const sortedData = [...(data || [])].sort((a, b) => {
+      if (bustCache) cacheBust('achievements');
+      const data = await cacheGet('achievements', async () => {
+        const { data, error } = await supabase
+          .from('achievements')
+          .select('*');
+        if (error) throw error;
+        return data ?? [];
+      });
+      const sortedData = [...data].sort((a, b) => {
         const timeA = parseDateFromDescription(a.description);
         const timeB = parseDateFromDescription(b.description);
-        if (timeA !== timeB) {
-          return timeB - timeA;
-        }
+        if (timeA !== timeB) return timeB - timeA;
         return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
       });
-      
       setAchievements(sortedData);
     } catch {
       setAchievements([]);
@@ -259,7 +259,7 @@ const Achievements = () => {
       });
 
       setModalOpen(false);
-      loadAchievements();
+      loadAchievements(true);
     } catch (err) {
       console.error(err);
       setStatus("Failed to save. Please try again.");
@@ -285,7 +285,7 @@ const Achievements = () => {
         const { error } = await supabase.from('achievements').delete().eq('id', id);
         if (error) throw error;
         
-        loadAchievements();
+        loadAchievements(true);
         Swal.fire({
           title: "Deleted!",
           text: "The achievement has been deleted.",
@@ -384,8 +384,8 @@ const Achievements = () => {
               return (
                 <div
                   key={ach.id}
-                  onMouseEnter={() => setHoveredAchievement(ach)}
-                  onMouseLeave={() => setHoveredAchievement(null)}
+                  onMouseEnter={() => !isAdminVerified && setHoveredAchievement(ach)}
+                  onMouseLeave={() => !isAdminVerified && setHoveredAchievement(null)}
                   className="relative group bg-[#1e1e20] border border-white/10 rounded-2xl overflow-hidden hover:shadow-[0_10px_40px_-10px_rgba(212,175,55,0.15)] hover:border-[#D4AF37]/30 transition-all duration-500 transform hover:-translate-y-2 animate-fade-in-up"
                   style={{ animationDelay: `${index * 150}ms` }}
                 >
@@ -504,10 +504,10 @@ const Achievements = () => {
               <div className="absolute inset-0 bg-gradient-to-t from-[#1e1e20] to-transparent opacity-90 z-10"></div>
               
               <div className="absolute bottom-6 left-8 z-20 flex items-center gap-4">
-                <div className="w-24 h-24 rounded-2xl overflow-hidden bg-white border-2 border-[#D4AF37] flex-shrink-0 shadow-2xl">
+                <div className="w-24 h-24 rounded-2xl overflow-hidden bg-white border-2 border-[#D4AF37] flex-shrink-0 shadow-2xl flex items-center justify-center">
                   <img
                     src={hoveredAchievement.image || "https://placehold.co/100x100/ffffff/999999?text=Logo"}
-                    className="w-full h-full object-contain p-1"
+                    className="w-full h-full object-cover"
                     alt="School Logo"
                   />
                 </div>

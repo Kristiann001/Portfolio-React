@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import Swal from "sweetalert2";
 import { supabase } from "../utils/supabase";
+import { cacheGet, cacheBust } from "../utils/cache";
 
 interface Education {
   id: string;
@@ -48,24 +49,29 @@ const About = () => {
     return 0;
   };
 
-  const fetchEducation = async () => {
+  const fetchEducation = async (bustCache = false) => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("education")
-      .select("*");
-
-    if (!error && data) {
+    try {
+      if (bustCache) cacheBust('education');
+      const data = await cacheGet('education', async () => {
+        const { data, error } = await supabase
+          .from('education')
+          .select('*');
+        if (error) throw error;
+        return data ?? [];
+      });
       const sortedData = [...data].sort((a, b) => {
         const timeA = parseDateFromDuration(a.duration);
         const timeB = parseDateFromDuration(b.duration);
-        if (timeA !== timeB) {
-          return timeB - timeA; // Descending
-        }
+        if (timeA !== timeB) return timeB - timeA;
         return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
       });
       setEducationList(sortedData);
+    } catch {
+      setEducationList([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -75,7 +81,7 @@ const About = () => {
   const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this record?")) {
       await supabase.from("education").delete().eq("id", id);
-      fetchEducation();
+      fetchEducation(true);
     }
   };
 
@@ -215,7 +221,7 @@ const About = () => {
         await supabase.from("education").insert([payload]);
       }
       setShowForm(false);
-      fetchEducation();
+      fetchEducation(true);
     } catch (err) {
       console.error(err);
       setSavingStatus("Failed to save.");

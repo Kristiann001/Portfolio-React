@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Swal from 'sweetalert2';
 import { supabase } from '../utils/supabase';
+import { cacheGet, cacheBust } from '../utils/cache';
 
 interface Project {
   id: string;
@@ -36,16 +37,19 @@ const Projects = () => {
   const [hoveredProject, setHoveredProject] = useState<Project | null>(null);
 
 
-  const loadProjects = useCallback(async () => {
+  const loadProjects = useCallback(async (bustCache = false) => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setProjects(data || []);
+      if (bustCache) cacheBust('projects');
+      const data = await cacheGet('projects', async () => {
+        const { data, error } = await supabase
+          .from('projects')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        return data ?? [];
+      });
+      setProjects(data);
     } catch {
       setProjects([]);
     } finally {
@@ -212,7 +216,7 @@ const Projects = () => {
       });
 
       setModalOpen(false);
-      loadProjects();
+      loadProjects(true);
     } catch (err) {
       console.error(err);
       setStatus('Failed to save project. Please try again.');
@@ -238,7 +242,7 @@ const Projects = () => {
         const { error } = await supabase.from('projects').delete().eq('id', id);
         if (error) throw error;
         
-        loadProjects();
+        loadProjects(true);
         Swal.fire({
           title: 'Deleted!',
           text: 'The project has been deleted.',
@@ -346,8 +350,8 @@ const Projects = () => {
               return (
                 <div
                   key={proj.id}
-                  onMouseEnter={() => setHoveredProject(proj)}
-                  onMouseLeave={() => setHoveredProject(null)}
+                  onMouseEnter={() => !isAdminVerified && setHoveredProject(proj)}
+                  onMouseLeave={() => !isAdminVerified && setHoveredProject(null)}
                   className="group bg-[#3a3a3c] bg-gradient-to-br from-[#3a3a3c] to-[#2b2b2d] rounded-2xl overflow-hidden border border-white/10 hover:border-green-500/30 transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] flex flex-col h-full ring-1 ring-white/5"
                 >
                   <div className="relative h-56 overflow-hidden">
