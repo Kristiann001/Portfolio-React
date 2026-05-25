@@ -37,6 +37,7 @@ const Achievements = () => {
   const certFileRef = useRef<HTMLInputElement>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [certPreview, setCertPreview] = useState<{ url: string; isPdf: boolean; name: string } | null>(null);
+  const [hoveredAchievement, setHoveredAchievement] = useState<Achievement | null>(null);
 
   const parseDateFromDescription = (desc: string) => {
     if (!desc) return 0;
@@ -383,6 +384,8 @@ const Achievements = () => {
               return (
                 <div
                   key={ach.id}
+                  onMouseEnter={() => setHoveredAchievement(ach)}
+                  onMouseLeave={() => setHoveredAchievement(null)}
                   className="relative group bg-[#1e1e20] border border-white/10 rounded-2xl overflow-hidden hover:shadow-[0_10px_40px_-10px_rgba(212,175,55,0.15)] hover:border-[#D4AF37]/30 transition-all duration-500 transform hover:-translate-y-2 animate-fade-in-up"
                   style={{ animationDelay: `${index * 150}ms` }}
                 >
@@ -480,6 +483,47 @@ const Achievements = () => {
           </div>
         )}
       </section>
+
+      {hoveredAchievement && (
+        <div className="fixed inset-0 z-50 pointer-events-none flex items-center justify-center p-4 backdrop-blur-sm bg-black/40 transition-all duration-300">
+          <div className="bg-[#1e1e20] rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(212,175,55,0.2)] max-w-2xl w-full border border-[#D4AF37]/50 transform scale-100 opacity-100 transition-all duration-300 flex flex-col max-h-[90vh]">
+            <div className="h-72 w-full relative shrink-0 bg-[#2b2b2d]">
+              {hoveredAchievement.certification && (
+                hoveredAchievement.certification.toLowerCase().endsWith(".pdf") ||
+                hoveredAchievement.certification.startsWith("data:application/pdf")
+              ) ? (
+                <PdfPreview src={hoveredAchievement.certification} className="w-full h-full" />
+              ) : hoveredAchievement.certification ? (
+                <img src={hoveredAchievement.certification} className="w-full h-full object-cover" alt="Certificate" />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
+                  <i className="fas fa-certificate text-[#D4AF37] text-6xl mb-4 opacity-50"></i>
+                  <span className="text-sm text-gray-500 tracking-widest uppercase">No Certificate</span>
+                </div>
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#1e1e20] to-transparent opacity-90 z-10"></div>
+              
+              <div className="absolute bottom-6 left-8 z-20 flex items-center gap-4">
+                <div className="w-24 h-24 rounded-2xl overflow-hidden bg-white border-2 border-[#D4AF37] flex-shrink-0 shadow-2xl">
+                  <img
+                    src={hoveredAchievement.image || "https://placehold.co/100x100/ffffff/999999?text=Logo"}
+                    className="w-full h-full object-contain p-1"
+                    alt="School Logo"
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-8 pt-4 overflow-y-auto custom-scrollbar relative z-20">
+              <h3 className="text-3xl font-extrabold text-white mb-2 drop-shadow-md">{hoveredAchievement.title}</h3>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#D4AF37] text-xs font-medium mb-4">
+                <i className="far fa-calendar-alt"></i>
+                <span>{hoveredAchievement.description || "No Date provided"}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Admin Password Modal */}
       {adminModalOpen && (

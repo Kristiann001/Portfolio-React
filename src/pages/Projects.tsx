@@ -33,6 +33,7 @@ const Projects = () => {
   const [adminPassword, setAdminPassword] = useState('');
   const imageFileRef = useRef<HTMLInputElement>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [hoveredProject, setHoveredProject] = useState<Project | null>(null);
 
 
   const loadProjects = useCallback(async () => {
@@ -345,6 +346,8 @@ const Projects = () => {
               return (
                 <div
                   key={proj.id}
+                  onMouseEnter={() => setHoveredProject(proj)}
+                  onMouseLeave={() => setHoveredProject(null)}
                   className="group bg-[#3a3a3c] bg-gradient-to-br from-[#3a3a3c] to-[#2b2b2d] rounded-2xl overflow-hidden border border-white/10 hover:border-green-500/30 transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] flex flex-col h-full ring-1 ring-white/5"
                 >
                   <div className="relative h-56 overflow-hidden">
@@ -395,6 +398,21 @@ const Projects = () => {
           </div>
         )}
       </section>
+
+      {hoveredProject && (
+        <div className="fixed inset-0 z-50 pointer-events-none flex items-center justify-center p-4 backdrop-blur-sm bg-black/40 transition-all duration-300">
+          <div className="bg-[#1e1e20] rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(34,197,94,0.3)] max-w-2xl w-full border border-green-500/50 transform scale-100 opacity-100 transition-all duration-300 flex flex-col max-h-[90vh]">
+            <div className="h-72 w-full relative shrink-0">
+              <img src={hoveredProject.image || "https://placehold.co/800x600/2b2b2d/ffffff?text=No+Image"} alt={hoveredProject.title} className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#1e1e20] to-transparent opacity-90"></div>
+            </div>
+            <div className="p-8 relative -mt-16 overflow-y-auto custom-scrollbar">
+              <h3 className="text-3xl font-extrabold text-white mb-4 drop-shadow-md">{hoveredProject.title}</h3>
+              <p className="text-gray-300 text-base leading-relaxed">{hoveredProject.description}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Admin Password Modal */}
       {adminModalOpen && (
