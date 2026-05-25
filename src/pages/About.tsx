@@ -9,6 +9,7 @@ interface Education {
   duration: string;
   description: string;
   image_url: string;
+  created_at?: string;
 }
 
 const About = () => {
@@ -29,15 +30,40 @@ const About = () => {
   const imageFileRef = useRef<HTMLInputElement>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
+  const parseDateFromDuration = (duration: string) => {
+    if (!duration) return 0;
+    const parts = duration.split('-');
+    const latestPart = parts[parts.length - 1].trim();
+    if (latestPart.toLowerCase() === 'present') {
+      return new Date().getTime();
+    }
+    const timestamp = Date.parse(latestPart);
+    if (!isNaN(timestamp)) {
+      return timestamp;
+    }
+    const yearMatch = latestPart.match(/\d{4}/);
+    if (yearMatch) {
+      return new Date(parseInt(yearMatch[0]), 0, 1).getTime();
+    }
+    return 0;
+  };
+
   const fetchEducation = async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("education")
-      .select("*")
-      .order("created_at", { ascending: false });
+      .select("*");
 
     if (!error && data) {
-      setEducationList(data);
+      const sortedData = [...data].sort((a, b) => {
+        const timeA = parseDateFromDuration(a.duration);
+        const timeB = parseDateFromDuration(b.duration);
+        if (timeA !== timeB) {
+          return timeB - timeA; // Descending
+        }
+        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+      });
+      setEducationList(sortedData);
     }
     setLoading(false);
   };

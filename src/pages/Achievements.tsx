@@ -10,6 +10,7 @@ interface Achievement {
   image: string;
   file_name?: string;
   certification?: string;
+  created_at?: string;
 }
 
 const Achievements = () => {
@@ -37,16 +38,38 @@ const Achievements = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [certPreview, setCertPreview] = useState<{ url: string; isPdf: boolean; name: string } | null>(null);
 
+  const parseDateFromDescription = (desc: string) => {
+    if (!desc) return 0;
+    const timestamp = Date.parse(desc);
+    if (!isNaN(timestamp)) {
+      return timestamp;
+    }
+    const yearMatch = desc.match(/\d{4}/);
+    if (yearMatch) {
+      return new Date(parseInt(yearMatch[0]), 0, 1).getTime();
+    }
+    return 0;
+  };
+
   const loadAchievements = useCallback(async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
         .from('achievements')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select('*');
         
       if (error) throw error;
-      setAchievements(data || []);
+
+      const sortedData = [...(data || [])].sort((a, b) => {
+        const timeA = parseDateFromDescription(a.description);
+        const timeB = parseDateFromDescription(b.description);
+        if (timeA !== timeB) {
+          return timeB - timeA;
+        }
+        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+      });
+      
+      setAchievements(sortedData);
     } catch {
       setAchievements([]);
     } finally {
