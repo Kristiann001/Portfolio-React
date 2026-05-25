@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Swal from "sweetalert2";
 import { supabase } from "../utils/supabase";
+import PdfPreview from "../components/PdfPreview";
 
 interface Achievement {
   id: string;
@@ -31,7 +32,10 @@ const Achievements = () => {
   const [statusColor, setStatusColor] = useState("text-white");
   const [adminPassword, setAdminPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-
+  const imageFileRef = useRef<HTMLInputElement>(null);
+  const certFileRef = useRef<HTMLInputElement>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [certPreview, setCertPreview] = useState<{ url: string; isPdf: boolean; name: string } | null>(null);
 
   const loadAchievements = useCallback(async () => {
     setLoading(true);
@@ -97,6 +101,8 @@ const Achievements = () => {
       });
     }
     setStatus("");
+    setImagePreview(null);
+    setCertPreview(null);
     setModalOpen(true);
   };
 
@@ -155,50 +161,42 @@ const Achievements = () => {
     let finalCertUrl = formData.certificationUrl;
     let fileName = "";
 
+    const readAsBase64 = (file: File): Promise<string> =>
+      new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error("Failed to read file"));
+        reader.readAsDataURL(file);
+      });
+
     try {
-      // 1. Handle Image Upload
+      // 1. Handle Image Upload — convert to base64, store in DB
       if (formData.imageType === "file") {
-        const fileInput = document.querySelector('input[name="image"]') as HTMLInputElement;
+        const fileInput = imageFileRef.current;
         if (fileInput && fileInput.files && fileInput.files[0]) {
           const file = fileInput.files[0];
-          const fileExt = file.name.split('.').pop();
           fileName = file.name;
-          const storageName = `${Math.random()}.${fileExt}`;
-          
-          const { data, error } = await supabase.storage
-            .from('portfolio')
-            .upload(`achievements/${storageName}`, file);
-            
-          if (error) throw error;
-          
-          if (data) {
-            const { data: publicUrlData } = supabase.storage
-              .from('portfolio')
-              .getPublicUrl(`achievements/${storageName}`);
-            finalImageUrl = publicUrlData.publicUrl;
+          try {
+            finalImageUrl = await readAsBase64(file);
+          } catch {
+            setStatus("Failed to read image file.");
+            setStatusColor("text-red-400");
+            return;
           }
         }
       }
 
-      // 2. Handle Certification Doc Upload
+      // 2. Handle Certification Upload — convert to base64, store in DB
       if (formData.certType === "file") {
-        const fileInput = document.querySelector('input[name="certification"]') as HTMLInputElement;
+        const fileInput = certFileRef.current;
         if (fileInput && fileInput.files && fileInput.files[0]) {
           const file = fileInput.files[0];
-          const fileExt = file.name.split('.').pop();
-          const storageName = `${Math.random()}.${fileExt}`;
-          
-          const { data, error } = await supabase.storage
-            .from('portfolio')
-            .upload(`achievements/${storageName}`, file);
-            
-          if (error) throw error;
-          
-          if (data) {
-            const { data: publicUrlData } = supabase.storage
-              .from('portfolio')
-              .getPublicUrl(`achievements/${storageName}`);
-            finalCertUrl = publicUrlData.publicUrl;
+          try {
+            finalCertUrl = await readAsBase64(file);
+          } catch {
+            setStatus("Failed to read certificate file.");
+            setStatusColor("text-red-400");
+            return;
           }
         }
       }
@@ -354,7 +352,10 @@ const Achievements = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredAchievements.map((ach, index) => {
-              const isPDF = ach.certification && ach.certification.toLowerCase().endsWith(".pdf");
+              const isPDF = ach.certification && (
+                ach.certification.toLowerCase().endsWith(".pdf") ||
+                ach.certification.startsWith("data:application/pdf")
+              );
               
               return (
                 <div
@@ -368,15 +369,15 @@ const Achievements = () => {
                       <img
                         src={ach.certification}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                        alt="Certificate Banner"
+                        alt="Certificate"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                       />
+                    ) : isPDF ? (
+                      <PdfPreview src={ach.certification!} className="w-full h-full" />
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
-                        <i
-                          className={`fas ${
-                            isPDF ? "fa-file-pdf text-red-400" : "fa-certificate text-[#D4AF37]"
-                          } text-4xl mb-2 opacity-30 group-hover:opacity-60 transition-opacity`}
-                        ></i>
+                        <i className="fas fa-certificate text-[#D4AF37] text-4xl mb-2 opacity-30 group-hover:opacity-60 transition-opacity"></i>
+                        <span className="text-xs text-gray-500 tracking-widest uppercase">No Certificate</span>
                       </div>
                     )}
                     {/* Golden Certified Badge */}
@@ -392,10 +393,10 @@ const Achievements = () => {
                   <div className="p-6 relative pt-2">
                     <div className="flex items-start gap-4 mb-4">
                       {/* School Image (Thumbnail) */}
-                      <div className="w-16 h-16 rounded-xl overflow-hidden bg-black/50 border border-[#D4AF37]/20 flex-shrink-0 shadow-xl relative -mt-8 z-20 p-1 bg-gradient-to-br from-[#3a3a3c] to-[#1e1e20]">
+                      <div className="w-20 h-20 rounded-xl overflow-hidden bg-white border border-[#D4AF37]/30 flex-shrink-0 shadow-xl relative -mt-10 z-20">
                         <img
-                          src={ach.image || "https://placehold.co/100x100/2b2b2d/ffffff?text=Logo"}
-                          className="w-full h-full object-contain rounded-lg bg-black/40"
+                          src={ach.image || "https://placehold.co/100x100/ffffff/999999?text=Logo"}
+                          className="w-full h-full object-contain"
                           alt="School Logo"
                         />
                       </div>
@@ -626,26 +627,44 @@ const Achievements = () => {
                 </div>
 
                 {formData.imageType === "file" ? (
-                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-white/20 rounded-lg cursor-pointer hover:border-green-500/50 hover:bg-black/20 transition-all group">
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <i className="fas fa-cloud-upload-alt text-2xl text-gray-500 group-hover:text-green-500 mb-2 transition-colors"></i>
-                      <p className="mb-1 text-sm text-gray-400">
-                        <span className="font-semibold text-white">
-                          Click to upload
-                        </span>{" "}
-                        or drag and drop
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        Images, PDF, DOC (MAX. 10MB)
-                      </p>
-                    </div>
-                    <input
-                      type="file"
-                      name="image"
-                      accept="image/*, .pdf, .doc, .docx"
-                      className="hidden"
-                    />
-                  </label>
+                  <>
+                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-white/20 rounded-lg cursor-pointer hover:border-green-500/50 hover:bg-black/20 transition-all group">
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <i className="fas fa-cloud-upload-alt text-2xl text-gray-500 group-hover:text-green-500 mb-2 transition-colors"></i>
+                        <p className="mb-1 text-sm text-gray-400">
+                          <span className="font-semibold text-white">Click to upload</span>{" "}or drag and drop
+                        </p>
+                        <p className="text-xs text-gray-500">PNG, JPG (MAX. 10MB)</p>
+                      </div>
+                      <input
+                        type="file"
+                        name="image"
+                        accept="image/*"
+                        className="hidden"
+                        ref={imageFileRef}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = () => setImagePreview(reader.result as string);
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </label>
+                    {imagePreview && (
+                      <div className="mt-3 flex items-center gap-3 p-3 bg-black/30 rounded-xl border border-green-500/30">
+                        <img src={imagePreview} alt="Preview" className="w-14 h-14 rounded-lg object-contain bg-white p-1" />
+                        <div>
+                          <p className="text-xs font-bold text-green-400">✓ Logo ready to upload</p>
+                          <p className="text-xs text-gray-500 mt-0.5">Saved when you click Save Record</p>
+                        </div>
+                        <button type="button" onClick={() => { setImagePreview(null); if (imageFileRef.current) imageFileRef.current.value = ''; }} className="ml-auto text-gray-500 hover:text-red-400 transition-colors">
+                          <i className="fas fa-times"></i>
+                        </button>
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <div className="relative">
                     <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
@@ -702,25 +721,51 @@ const Achievements = () => {
                 </div>
 
                 {formData.certType === "file" ? (
-                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-white/20 rounded-lg cursor-pointer hover:border-green-500/50 hover:bg-black/20 transition-all group">
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <i className="fas fa-file-contract text-2xl text-gray-500 group-hover:text-green-500 mb-2 transition-colors"></i>
-                      <p className="mb-1 text-sm text-gray-400">
-                        <span className="font-semibold text-white">
-                          Click to upload certification
-                        </span>
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        PDF, Images (MAX. 10MB)
-                      </p>
-                    </div>
-                    <input
-                      type="file"
-                      name="certification"
-                      accept="image/*, .pdf"
-                      className="hidden"
-                    />
-                  </label>
+                  <>
+                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-white/20 rounded-lg cursor-pointer hover:border-green-500/50 hover:bg-black/20 transition-all group">
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <i className="fas fa-file-contract text-2xl text-gray-500 group-hover:text-green-500 mb-2 transition-colors"></i>
+                        <p className="mb-1 text-sm text-gray-400">
+                          <span className="font-semibold text-white">Click to upload certification</span>
+                        </p>
+                        <p className="text-xs text-gray-500">PDF, Images (MAX. 10MB)</p>
+                      </div>
+                      <input
+                        type="file"
+                        name="certification"
+                        accept="image/*, .pdf"
+                        className="hidden"
+                        ref={certFileRef}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const isPdf = file.type === 'application/pdf';
+                            const reader = new FileReader();
+                            reader.onload = () => setCertPreview({ url: reader.result as string, isPdf, name: file.name });
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </label>
+                    {certPreview && (
+                      <div className="mt-3 flex items-center gap-3 p-3 bg-black/30 rounded-xl border border-[#D4AF37]/30">
+                        {certPreview.isPdf ? (
+                          <div className="w-12 h-12 rounded-lg bg-red-500/10 border border-red-400/20 flex items-center justify-center flex-shrink-0">
+                            <i className="fas fa-file-pdf text-xl text-red-400"></i>
+                          </div>
+                        ) : (
+                          <img src={certPreview.url} alt="Cert Preview" className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
+                        )}
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-[#D4AF37]">✓ {certPreview.isPdf ? 'PDF' : 'Image'} ready to upload</p>
+                          <p className="text-xs text-gray-500 mt-0.5 truncate">{certPreview.name}</p>
+                        </div>
+                        <button type="button" onClick={() => { setCertPreview(null); if (certFileRef.current) certFileRef.current.value = ''; }} className="ml-auto text-gray-500 hover:text-red-400 transition-colors flex-shrink-0">
+                          <i className="fas fa-times"></i>
+                        </button>
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <div className="relative">
                     <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">

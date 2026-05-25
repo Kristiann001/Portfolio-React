@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Swal from "sweetalert2";
 import { supabase } from "../utils/supabase";
 
@@ -26,6 +26,8 @@ const About = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   const [savingStatus, setSavingStatus] = useState("");
+  const imageFileRef = useRef<HTMLInputElement>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const fetchEducation = async () => {
     setLoading(true);
@@ -123,6 +125,7 @@ const About = () => {
       });
     }
     setSavingStatus("");
+    setImagePreview(null);
     setShowForm(true);
   };
 
@@ -133,28 +136,19 @@ const About = () => {
     let finalImageUrl = formData.image_url;
 
     if (formData.imageType === "file") {
-      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+      const fileInput = imageFileRef.current;
       if (fileInput && fileInput.files && fileInput.files[0]) {
         const file = fileInput.files[0];
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
-        
         try {
-          const { data, error } = await supabase.storage
-            .from('portfolio')
-            .upload(`education/${fileName}`, file);
-            
-          if (error) throw error;
-          
-          if (data) {
-            const { data: publicUrlData } = supabase.storage
-              .from('portfolio')
-              .getPublicUrl(`education/${fileName}`);
-            finalImageUrl = publicUrlData.publicUrl;
-          }
+          finalImageUrl = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = () => reject(new Error("Failed to read file"));
+            reader.readAsDataURL(file);
+          });
         } catch (err) {
-          console.error("Upload error:", err);
-          setSavingStatus("Failed to upload image.");
+          console.error("File read error:", err);
+          setSavingStatus("Failed to read image file.");
           return;
         }
       }
@@ -292,15 +286,15 @@ const About = () => {
                 {/* Ambient Hover Glow */}
                 <div className="absolute top-0 right-0 w-48 h-48 bg-green-500/5 rounded-full blur-[50px] pointer-events-none group-hover:bg-green-500/10 group-hover:scale-150 transition-all duration-700"></div>
 
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-black/40 border border-white/10 flex items-center justify-center shrink-0 shadow-inner group-hover:border-green-500/50 transition-colors duration-500 p-3 relative z-10">
+                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-white border border-white/20 flex items-center justify-center shrink-0 shadow-lg group-hover:border-green-500/50 group-hover:shadow-green-500/10 transition-all duration-500 overflow-hidden relative z-10">
                   {edu.image_url ? (
                     <img
                       src={edu.image_url}
                       alt={`${edu.institution} logo`}
-                      className="w-full h-full object-contain filter group-hover:brightness-110 transition-all"
+                      className="w-full h-full object-contain transition-all group-hover:scale-105 duration-500"
                     />
                   ) : (
-                    <i className="fas fa-university text-2xl sm:text-3xl text-gray-500 group-hover:text-green-400 transition-colors"></i>
+                    <i className="fas fa-university text-3xl sm:text-4xl text-gray-400 group-hover:text-green-400 transition-colors"></i>
                   )}
                 </div>
                 
@@ -536,16 +530,44 @@ const About = () => {
                 </div>
 
                 {formData.imageType === "file" ? (
-                  <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-white/20 rounded-lg cursor-pointer hover:border-green-500/50 hover:bg-black/20 transition-all group">
-                    <div className="flex flex-col items-center justify-center pt-3 pb-3">
-                      <i className="fas fa-cloud-upload-alt text-xl text-gray-500 group-hover:text-green-500 mb-1 transition-colors"></i>
-                      <p className="mb-1 text-sm text-gray-400">
-                        <span className="font-semibold text-white">Click to upload</span>
-                      </p>
-                      <p className="text-xs text-gray-500">PNG, JPG (MAX 5MB)</p>
-                    </div>
-                    <input type="file" name="image" accept="image/*" className="hidden" />
-                  </label>
+                  <>
+                    <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-white/20 rounded-lg cursor-pointer hover:border-green-500/50 hover:bg-black/20 transition-all group">
+                      <div className="flex flex-col items-center justify-center pt-3 pb-3">
+                        <i className="fas fa-cloud-upload-alt text-xl text-gray-500 group-hover:text-green-500 mb-1 transition-colors"></i>
+                        <p className="mb-1 text-sm text-gray-400">
+                          <span className="font-semibold text-white">Click to upload</span>
+                        </p>
+                        <p className="text-xs text-gray-500">PNG, JPG (MAX 5MB)</p>
+                      </div>
+                      <input
+                        type="file"
+                        name="image"
+                        accept="image/*"
+                        className="hidden"
+                        ref={imageFileRef}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = () => setImagePreview(reader.result as string);
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </label>
+                    {imagePreview && (
+                      <div className="mt-3 flex items-center gap-3 p-3 bg-black/30 rounded-xl border border-green-500/30">
+                        <img src={imagePreview} alt="Preview" className="w-16 h-16 rounded-lg object-contain bg-white p-1" />
+                        <div>
+                          <p className="text-xs font-bold text-green-400">✓ Image ready to upload</p>
+                          <p className="text-xs text-gray-500 mt-0.5">This will be saved when you click Save</p>
+                        </div>
+                        <button type="button" onClick={() => { setImagePreview(null); if (imageFileRef.current) imageFileRef.current.value = ''; }} className="ml-auto text-gray-500 hover:text-red-400 transition-colors">
+                          <i className="fas fa-times"></i>
+                        </button>
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <div className="relative">
                     <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">

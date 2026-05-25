@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Swal from 'sweetalert2';
 import { supabase } from '../utils/supabase';
 
@@ -31,6 +31,8 @@ const Projects = () => {
   const [status, setStatus] = useState('');
   const [statusColor, setStatusColor] = useState('text-white');
   const [adminPassword, setAdminPassword] = useState('');
+  const imageFileRef = useRef<HTMLInputElement>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
 
   const loadProjects = useCallback(async () => {
@@ -97,6 +99,7 @@ const Projects = () => {
       });
     }
     setStatus('');
+    setImagePreview(null);
     setModalOpen(true);
   };
 
@@ -152,30 +155,21 @@ const Projects = () => {
 
     let finalImageUrl = formData.imageUrl;
 
-    // Handle file upload to Supabase Storage if selected
+    // Handle file upload — convert to base64 and store in DB directly
     if (formData.imageType === 'file') {
-      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+      const fileInput = imageFileRef.current;
       if (fileInput && fileInput.files && fileInput.files[0]) {
         const file = fileInput.files[0];
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
-        
         try {
-          const { data, error } = await supabase.storage
-            .from('portfolio')
-            .upload(`projects/${fileName}`, file);
-            
-          if (error) throw error;
-          
-          if (data) {
-            const { data: publicUrlData } = supabase.storage
-              .from('portfolio')
-              .getPublicUrl(`projects/${fileName}`);
-            finalImageUrl = publicUrlData.publicUrl;
-          }
+          finalImageUrl = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = () => reject(new Error("Failed to read file"));
+            reader.readAsDataURL(file);
+          });
         } catch (err) {
-          console.error("Upload error:", err);
-          setStatus('Failed to upload image.');
+          console.error("File read error:", err);
+          setStatus('Failed to read image file.');
           setStatusColor('text-red-400');
           return;
         }
@@ -548,16 +542,44 @@ const Projects = () => {
                 </div>
 
                 {formData.imageType === 'file' ? (
-                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-white/20 rounded-lg cursor-pointer hover:border-green-500/50 hover:bg-black/20 transition-all group">
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <i className="fas fa-cloud-upload-alt text-2xl text-gray-500 group-hover:text-green-500 mb-2 transition-colors"></i>
-                      <p className="mb-1 text-sm text-gray-400">
-                        <span className="font-semibold text-white">Click to upload</span> or drag and drop
-                      </p>
-                      <p className="text-xs text-gray-500">SVG, PNG, JPG or GIF (MAX. 10MB)</p>
-                    </div>
-                    <input type="file" name="image" accept="image/*" className="hidden" />
-                  </label>
+                  <>
+                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-white/20 rounded-lg cursor-pointer hover:border-green-500/50 hover:bg-black/20 transition-all group">
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <i className="fas fa-cloud-upload-alt text-2xl text-gray-500 group-hover:text-green-500 mb-2 transition-colors"></i>
+                        <p className="mb-1 text-sm text-gray-400">
+                          <span className="font-semibold text-white">Click to upload</span> or drag and drop
+                        </p>
+                        <p className="text-xs text-gray-500">SVG, PNG, JPG or GIF (MAX. 10MB)</p>
+                      </div>
+                      <input
+                        type="file"
+                        name="image"
+                        accept="image/*"
+                        className="hidden"
+                        ref={imageFileRef}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = () => setImagePreview(reader.result as string);
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </label>
+                    {imagePreview && (
+                      <div className="mt-3 flex items-center gap-3 p-3 bg-black/30 rounded-xl border border-green-500/30">
+                        <img src={imagePreview} alt="Preview" className="w-20 h-14 rounded-lg object-cover" />
+                        <div>
+                          <p className="text-xs font-bold text-green-400">✓ Image ready to upload</p>
+                          <p className="text-xs text-gray-500 mt-0.5">Will be saved when you click Save</p>
+                        </div>
+                        <button type="button" onClick={() => { setImagePreview(null); if (imageFileRef.current) imageFileRef.current.value = ''; }} className="ml-auto text-gray-500 hover:text-red-400 transition-colors">
+                          <i className="fas fa-times"></i>
+                        </button>
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <div className="relative">
                     <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
