@@ -19,10 +19,7 @@ const Contact = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             {/* Phone */}
-            <a
-              href="tel:+254759725385"
-              className="group bg-[#1e1e20]/80 backdrop-blur-xl border border-white/5 p-5 sm:p-6 md:p-8 rounded-3xl shadow-2xl hover:bg-[#2b2b2d] hover:border-green-500/30 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(34,197,94,0.2)] flex items-center gap-4 md:gap-6 relative overflow-hidden"
-            >
+            <div className="group bg-[#1e1e20]/80 backdrop-blur-xl border border-white/5 p-5 sm:p-6 md:p-8 rounded-3xl shadow-2xl hover:bg-[#2b2b2d] hover:border-green-500/30 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(34,197,94,0.2)] flex items-center gap-4 md:gap-6 relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-r from-green-600/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-black/40 border border-white/10 flex items-center justify-center shrink-0 group-hover:bg-green-500/20 group-hover:border-green-500/40 transition-all duration-500 shadow-inner">
                 <i className="fas fa-phone-alt text-xl md:text-2xl text-gray-400 group-hover:text-green-400 transition-colors"></i>
@@ -31,16 +28,10 @@ const Contact = () => {
                 <p className="text-[10px] sm:text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Phone</p>
                 <p className="text-sm sm:text-base md:text-xl font-bold text-white group-hover:text-green-400 transition-colors truncate">+254 759 725 385</p>
               </div>
-              <div className="absolute right-4 md:right-8 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-x-4 group-hover:translate-x-0 hidden sm:block">
-                <i className="fas fa-arrow-right text-green-500"></i>
-              </div>
-            </a>
+            </div>
 
             {/* Email */}
-            <a
-              href="mailto:kristian.koome@outlook.com"
-              className="group bg-[#1e1e20]/80 backdrop-blur-xl border border-white/5 p-5 sm:p-6 md:p-8 rounded-3xl shadow-2xl hover:bg-[#2b2b2d] hover:border-green-500/30 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(34,197,94,0.2)] flex items-center gap-4 md:gap-6 relative overflow-hidden"
-            >
+            <div className="group bg-[#1e1e20]/80 backdrop-blur-xl border border-white/5 p-5 sm:p-6 md:p-8 rounded-3xl shadow-2xl hover:bg-[#2b2b2d] hover:border-green-500/30 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(34,197,94,0.2)] flex items-center gap-4 md:gap-6 relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-r from-green-600/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-black/40 border border-white/10 flex items-center justify-center shrink-0 group-hover:bg-green-500/20 group-hover:border-green-500/40 transition-all duration-500 shadow-inner">
                 <i className="fas fa-envelope text-xl md:text-2xl text-gray-400 group-hover:text-green-400 transition-colors"></i>
@@ -49,10 +40,7 @@ const Contact = () => {
                 <p className="text-[10px] sm:text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">Email</p>
                 <p className="text-sm sm:text-base md:text-xl font-bold text-white group-hover:text-green-400 transition-colors truncate">kristian.koome@outlook.com</p>
               </div>
-              <div className="absolute right-4 md:right-8 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-x-4 group-hover:translate-x-0 hidden sm:block">
-                <i className="fas fa-arrow-right text-green-500"></i>
-              </div>
-            </a>
+            </div>
 
             {/* Location */}
             <div className="group bg-[#1e1e20]/80 backdrop-blur-xl border border-white/5 p-5 sm:p-6 md:p-8 rounded-3xl shadow-2xl hover:bg-[#2b2b2d] hover:border-green-500/30 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(34,197,94,0.2)] flex items-center gap-4 md:gap-6 relative overflow-hidden">

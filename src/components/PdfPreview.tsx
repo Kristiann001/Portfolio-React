@@ -43,7 +43,7 @@ const PdfPreview = ({ src, className = "" }: PdfPreviewProps) => {
         canvas.width = viewport.width;
         canvas.height = viewport.height;
 
-        await page.render({ canvasContext: context, viewport }).promise;
+        await page.render({ canvasContext: context, viewport, canvas }).promise;
         if (!cancelled) setLoading(false);
       } catch (err) {
         if (!cancelled) {
