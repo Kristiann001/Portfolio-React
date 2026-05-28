@@ -21,26 +21,22 @@ jobs:
         with:
           node-version: "22"
           cache: "npm"
-          cache-dependency-path: portfolio-react/package-lock.json
+          cache-dependency-path: package-lock.json
 
       # ── 3. Install dependencies (clean install) ───────────────────────────
       - name: Install dependencies
-        working-directory: portfolio-react
         run: npm ci
 
       # ── 4. TypeScript type-check (no emit — catches type errors fast) ─────
       - name: TypeScript type-check
-        working-directory: portfolio-react
         run: npx tsc --noEmit
 
       # ── 5. ESLint ─────────────────────────────────────────────────────────
       - name: Run ESLint
-        working-directory: portfolio-react
         run: npm run lint
 
       # ── 6. Production build ───────────────────────────────────────────────
       - name: Build project
-        working-directory: portfolio-react
         env:
           # Provide stub env vars so Vite doesn't fail on missing imports
           VITE_SUPABASE_URL: "https://placeholder.supabase.co"
@@ -53,7 +49,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: dist
-          path: portfolio-react/dist
+          path: dist
           retention-days: 7
 
   # ── Optional: deploy to Vercel (uncomment + add secrets to repo) ──────────
@@ -71,5 +67,5 @@ jobs:
   #         vercel-token: ${{ secrets.VERCEL_TOKEN }}
   #         vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
   #         vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-  #         working-directory: portfolio-react
+  #         working-directory: .
   #         vercel-args: '--prod'
