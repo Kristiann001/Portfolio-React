@@ -308,13 +308,13 @@ const Achievements = () => {
   };
 
   return (
-    <main className="lg:ml-72 p-6 sm:p-8 md:p-10 lg:p-12 min-h-screen bg-[#2b2b2d] text-white pb-24 relative overflow-hidden">
+    <main className="lg:ml-72 p-4 sm:p-8 md:p-10 lg:p-12 min-h-screen bg-[#2b2b2d] text-white pb-24 relative overflow-hidden">
       {/* Background ambient glow */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#D4AF37]/5 rounded-full blur-[150px] pointer-events-none"></div>
       <section className="max-w-6xl mx-auto relative z-10">
         <div className="flex flex-row justify-between items-start sm:items-end gap-4 sm:gap-6 mb-6">
-          <div className="flex-1">
-            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] via-yellow-200 to-[#D4AF37] drop-shadow-sm mb-2">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] via-yellow-200 to-[#D4AF37] drop-shadow-sm mb-2 break-words">
               Achievements.
             </h2>
             <p className="text-[#D4AF37] font-bold tracking-widest uppercase text-xs sm:text-sm">Milestones & Certifications</p>
@@ -384,9 +384,8 @@ const Achievements = () => {
               return (
                 <div
                   key={ach.id}
-                  onMouseEnter={() => !isAdminVerified && setHoveredAchievement(ach)}
-                  onMouseLeave={() => !isAdminVerified && setHoveredAchievement(null)}
-                  className="relative group bg-[#1e1e20] border border-white/10 rounded-2xl overflow-hidden hover:shadow-[0_10px_40px_-10px_rgba(212,175,55,0.15)] hover:border-[#D4AF37]/30 transition-all duration-500 transform hover:-translate-y-2 animate-fade-in-up"
+                  onClick={() => setHoveredAchievement(ach)}
+                  className="relative group bg-[#1e1e20] border border-white/10 rounded-2xl overflow-hidden hover:shadow-[0_10px_40px_-10px_rgba(212,175,55,0.15)] hover:border-[#D4AF37]/30 transition-all duration-500 transform hover:-translate-y-2 animate-fade-in-up cursor-pointer"
                   style={{ animationDelay: `${index * 150}ms` }}
                 >
                   {/* Cert Image (Banner) */}
@@ -448,14 +447,14 @@ const Achievements = () => {
                         {isAdminVerified && (
                           <div className="flex gap-2">
                             <button
-                              onClick={() => openModal(ach.id)}
+                              onClick={(e) => { e.stopPropagation(); openModal(ach.id); }}
                               className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-colors"
                               title="Edit"
                             >
                               <i className="fas fa-pen text-xs"></i>
                             </button>
                             <button
-                              onClick={() => deleteAchievement(ach.id)}
+                              onClick={(e) => { e.stopPropagation(); deleteAchievement(ach.id); }}
                               className="w-8 h-8 flex items-center justify-center rounded-full bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
                               title="Delete"
                             >
@@ -468,6 +467,7 @@ const Achievements = () => {
                             href={ach.certification}
                             target="_blank"
                             rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
                             className="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition-colors"
                             title="View Document"
                           >
@@ -485,9 +485,21 @@ const Achievements = () => {
       </section>
 
       {hoveredAchievement && (
-        <div className="fixed inset-0 z-50 pointer-events-none flex items-center justify-center p-4 backdrop-blur-sm bg-black/40 transition-all duration-300">
-          <div className="bg-[#1e1e20] rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(212,175,55,0.2)] max-w-2xl w-full border border-[#D4AF37]/50 transform scale-100 opacity-100 transition-all duration-300 flex flex-col max-h-[90vh]">
-            <div className="h-72 w-full relative shrink-0 bg-[#2b2b2d]">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm bg-black/40 transition-all duration-300 cursor-pointer"
+          onClick={() => setHoveredAchievement(null)}
+        >
+          <div 
+            className="bg-[#1e1e20] rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(212,175,55,0.2)] max-w-2xl w-full border border-[#D4AF37]/50 transform scale-100 opacity-100 transition-all duration-300 flex flex-col max-h-[90vh] cursor-auto relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setHoveredAchievement(null)}
+              className="absolute top-4 right-4 z-50 w-8 h-8 flex items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/80 transition-colors"
+            >
+              <i className="fas fa-times"></i>
+            </button>
+            <div className="h-56 sm:h-72 w-full relative shrink-0 bg-[#2b2b2d]">
               {hoveredAchievement.certification && (
                 hoveredAchievement.certification.toLowerCase().endsWith(".pdf") ||
                 hoveredAchievement.certification.startsWith("data:application/pdf")
@@ -503,8 +515,8 @@ const Achievements = () => {
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-[#1e1e20] to-transparent opacity-90 z-10"></div>
               
-              <div className="absolute bottom-6 left-8 z-20 flex items-center gap-4">
-                <div className="w-24 h-24 rounded-2xl overflow-hidden bg-white border-2 border-[#D4AF37] flex-shrink-0 shadow-2xl flex items-center justify-center">
+              <div className="absolute bottom-4 sm:bottom-6 left-4 sm:left-8 z-20 flex items-center gap-4">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden bg-white border-2 border-[#D4AF37] flex-shrink-0 shadow-2xl flex items-center justify-center">
                   <img
                     src={hoveredAchievement.image || "https://placehold.co/100x100/ffffff/999999?text=Logo"}
                     className="w-full h-full object-cover"
@@ -514,8 +526,8 @@ const Achievements = () => {
               </div>
             </div>
             
-            <div className="p-8 pt-4 overflow-y-auto custom-scrollbar relative z-20">
-              <h3 className="text-3xl font-extrabold text-white mb-2 drop-shadow-md">{hoveredAchievement.title}</h3>
+            <div className="p-5 sm:p-8 pt-4 sm:pt-4 overflow-y-auto custom-scrollbar relative z-20">
+              <h3 className="text-2xl sm:text-3xl font-extrabold text-white mb-2 drop-shadow-md break-words">{hoveredAchievement.title}</h3>
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#D4AF37] text-xs font-medium mb-4">
                 <i className="far fa-calendar-alt"></i>
                 <span>{hoveredAchievement.description || "No Date provided"}</span>
@@ -528,7 +540,7 @@ const Achievements = () => {
       {/* Admin Password Modal */}
       {adminModalOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 px-4 transition-all duration-300">
-          <div className="bg-[#1e1e20]/90 border border-white/10 rounded-2xl shadow-[0_0_40px_rgba(34,197,94,0.15)] w-full max-w-md p-8 relative transform scale-100">
+          <div className="bg-[#1e1e20]/90 border border-white/10 rounded-2xl shadow-[0_0_40px_rgba(34,197,94,0.15)] w-full max-w-md p-6 sm:p-8 relative transform scale-100">
             <button
               onClick={() => setAdminModalOpen(false)}
               className="absolute top-5 right-5 text-gray-500 hover:text-white transition-colors w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10"
@@ -592,7 +604,7 @@ const Achievements = () => {
       {/* Achievement Modal */}
       {modalOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 px-4 transition-all duration-300">
-          <div className="bg-[#1e1e20]/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl shadow-green-500/10 w-full max-w-lg p-8 relative max-h-[90vh] overflow-y-auto">
+          <div className="bg-[#1e1e20]/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl shadow-green-500/10 w-full max-w-lg p-6 sm:p-8 relative max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => setModalOpen(false)}
               className="absolute top-5 right-5 text-gray-400 hover:text-white transition-colors w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10"

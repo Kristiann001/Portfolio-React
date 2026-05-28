@@ -265,13 +265,13 @@ const Projects = () => {
   };
 
   return (
-    <main className="lg:ml-72 p-6 sm:p-8 md:p-10 lg:p-12 min-h-screen bg-[#2b2b2d] text-white pb-24 relative overflow-hidden">
+    <main className="lg:ml-72 p-4 sm:p-8 md:p-10 lg:p-12 min-h-screen bg-[#2b2b2d] text-white pb-24 relative overflow-hidden">
       {/* Background ambient glow */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-cyan-500/5 rounded-full blur-[150px] pointer-events-none"></div>
       <section className="max-w-6xl mx-auto relative z-10">
         <div className="flex flex-row justify-between items-start sm:items-end gap-4 sm:gap-6 mb-6">
-          <div className="flex-1">
-            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-500 drop-shadow-sm mb-2">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-500 drop-shadow-sm mb-2 break-words">
               My Projects.
             </h2>
             <p className="text-cyan-400 font-bold tracking-widest uppercase text-xs sm:text-sm">Engineering & Design Showcase</p>
@@ -335,6 +335,7 @@ const Projects = () => {
                   href={proj.link}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
                   className="inline-flex items-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-500 text-white text-xs font-medium rounded-lg transition-all shadow-lg hover:shadow-green-900/30 transform hover:-translate-y-0.5"
                 >
                   <span>Code/Live</span>
@@ -350,9 +351,8 @@ const Projects = () => {
               return (
                 <div
                   key={proj.id}
-                  onMouseEnter={() => !isAdminVerified && setHoveredProject(proj)}
-                  onMouseLeave={() => !isAdminVerified && setHoveredProject(null)}
-                  className="group bg-[#3a3a3c] bg-gradient-to-br from-[#3a3a3c] to-[#2b2b2d] rounded-2xl overflow-hidden border border-white/10 hover:border-green-500/30 transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] flex flex-col h-full ring-1 ring-white/5"
+                  onClick={() => setHoveredProject(proj)}
+                  className="group bg-[#3a3a3c] bg-gradient-to-br from-[#3a3a3c] to-[#2b2b2d] rounded-2xl overflow-hidden border border-white/10 hover:border-green-500/30 transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] flex flex-col h-full ring-1 ring-white/5 cursor-pointer"
                 >
                   <div className="relative h-56 overflow-hidden">
                     <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-300 z-10"></div>
@@ -366,14 +366,14 @@ const Projects = () => {
                       {isAdminVerified && (
                         <div className="bg-black/50 backdrop-blur-md rounded-lg p-1.5 border border-white/10 flex gap-1">
                           <button
-                            onClick={() => openModal(proj.id)}
+                            onClick={(e) => { e.stopPropagation(); openModal(proj.id); }}
                             className="p-2 text-white hover:text-blue-400 transition-colors rounded hover:bg-white/10"
                             title="Edit"
                           >
                             <i className="fas fa-pen text-sm"></i>
                           </button>
                           <button
-                            onClick={() => deleteProject(proj.id)}
+                            onClick={(e) => { e.stopPropagation(); deleteProject(proj.id); }}
                             className="p-2 text-white hover:text-red-400 transition-colors rounded hover:bg-white/10"
                             title="Delete"
                           >
@@ -404,14 +404,26 @@ const Projects = () => {
       </section>
 
       {hoveredProject && (
-        <div className="fixed inset-0 z-50 pointer-events-none flex items-center justify-center p-4 backdrop-blur-sm bg-black/40 transition-all duration-300">
-          <div className="bg-[#1e1e20] rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(34,197,94,0.3)] max-w-2xl w-full border border-green-500/50 transform scale-100 opacity-100 transition-all duration-300 flex flex-col max-h-[90vh]">
-            <div className="h-72 w-full relative shrink-0">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm bg-black/40 transition-all duration-300 cursor-pointer"
+          onClick={() => setHoveredProject(null)}
+        >
+          <div 
+            className="bg-[#1e1e20] rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(34,197,94,0.3)] max-w-2xl w-full border border-green-500/50 transform scale-100 opacity-100 transition-all duration-300 flex flex-col max-h-[90vh] cursor-auto relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setHoveredProject(null)}
+              className="absolute top-4 right-4 z-50 w-8 h-8 flex items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/80 transition-colors"
+            >
+              <i className="fas fa-times"></i>
+            </button>
+            <div className="h-56 sm:h-72 w-full relative shrink-0">
               <img src={hoveredProject.image || "https://placehold.co/800x600/2b2b2d/ffffff?text=No+Image"} alt={hoveredProject.title} className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#1e1e20] to-transparent opacity-90"></div>
             </div>
-            <div className="p-8 relative -mt-16 overflow-y-auto custom-scrollbar">
-              <h3 className="text-3xl font-extrabold text-white mb-4 drop-shadow-md">{hoveredProject.title}</h3>
+            <div className="p-5 sm:p-8 relative -mt-12 sm:-mt-16 overflow-y-auto custom-scrollbar">
+              <h3 className="text-2xl sm:text-3xl font-extrabold text-white mb-4 drop-shadow-md break-words">{hoveredProject.title}</h3>
               <p className="text-gray-300 text-base leading-relaxed">{hoveredProject.description}</p>
             </div>
           </div>
@@ -421,7 +433,7 @@ const Projects = () => {
       {/* Admin Password Modal */}
       {adminModalOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 px-4 transition-all duration-300">
-          <div className="bg-[#1e1e20]/90 border border-white/10 rounded-2xl shadow-[0_0_40px_rgba(34,197,94,0.15)] w-full max-w-md p-8 relative transform scale-100">
+          <div className="bg-[#1e1e20]/90 border border-white/10 rounded-2xl shadow-[0_0_40px_rgba(34,197,94,0.15)] w-full max-w-md p-6 sm:p-8 relative transform scale-100">
             <button
               onClick={() => setAdminModalOpen(false)}
               className="absolute top-5 right-5 text-gray-500 hover:text-white transition-colors w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10"
@@ -485,7 +497,7 @@ const Projects = () => {
       {/* Project Modal */}
       {modalOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 px-4 transition-all duration-300">
-          <div className="bg-[#1e1e20]/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl shadow-green-500/10 w-full max-w-lg p-8 relative max-h-[90vh] overflow-y-auto">
+          <div className="bg-[#1e1e20]/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl shadow-green-500/10 w-full max-w-lg p-6 sm:p-8 relative max-h-[90vh] overflow-y-auto">
             <button onClick={() => setModalOpen(false)} className="absolute top-5 right-5 text-gray-400 hover:text-white transition-colors w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10">
               <i className="fas fa-times"></i>
             </button>
