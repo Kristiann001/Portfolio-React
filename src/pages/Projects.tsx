@@ -269,9 +269,9 @@ const Projects = () => {
       {/* Background ambient glow */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-cyan-500/5 rounded-full blur-[150px] pointer-events-none"></div>
       <section className="max-w-6xl mx-auto relative z-10">
-        <div className="flex flex-row justify-between items-start sm:items-end gap-4 sm:gap-6 mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 sm:gap-6 mb-6">
           <div className="flex-1 min-w-0">
-            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-500 drop-shadow-sm mb-2 break-words">
+            <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-500 drop-shadow-sm mb-2 break-words">
               My Projects.
             </h2>
             <p className="text-cyan-400 font-bold tracking-widest uppercase text-xs sm:text-sm">Engineering & Design Showcase</p>
