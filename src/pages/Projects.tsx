@@ -293,7 +293,7 @@ const Projects = () => {
             A showcase of digital products and applications I've engineered. 
             Each project demonstrates my approach to solving complex problems using modern technologies and intuitive design.
           </p>
-          <div className="w-full lg:w-auto flex gap-4">
+          <div className="w-full lg:w-auto flex flex-col sm:flex-row gap-4">
             <div className="relative w-full md:w-64">
               <input
                 type="text"
@@ -390,7 +390,7 @@ const Projects = () => {
                     </h3>
                     <p className="text-gray-400 text-sm leading-relaxed mb-6 flex-grow line-clamp-3">{proj.description}</p>
 
-                    <div className="mt-auto pt-5 border-t border-white/5 flex items-center justify-between">
+                    <div className="mt-auto pt-5 border-t border-white/5 flex flex-wrap items-center justify-between gap-3">
                       <div className="ml-auto flex gap-2">
                         {linkHtml}
                       </div>

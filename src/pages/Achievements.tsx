@@ -336,7 +336,7 @@ const Achievements = () => {
             A curated collection of professional certifications and badges I have earned. 
             These milestones represent my unwavering commitment to continuous learning and mastery of modern technologies.
           </p>
-          <div className="w-full lg:w-auto flex gap-4">
+          <div className="w-full lg:w-auto flex flex-col sm:flex-row gap-4">
             <div className="relative w-full md:w-64">
               <input
                 type="text"
@@ -435,7 +435,7 @@ const Achievements = () => {
                     </div>
 
                     {/* Issued Date Pill & Actions */}
-                    <div className="flex items-center justify-between mt-6 border-t border-white/5 pt-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3 mt-6 border-t border-white/5 pt-4">
                       {/* Issued Date Pill */}
                       <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#D4AF37] text-xs font-medium">
                         <i className="far fa-calendar-alt"></i>
